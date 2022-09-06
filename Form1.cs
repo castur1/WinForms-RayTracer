@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,8 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-
-// Next up: Fuzzyness! Chapter 9.6
 
 namespace RayTracer1 {
     public partial class Form1 : Form {
@@ -54,10 +52,10 @@ namespace RayTracer1 {
             // World
 
             HittableList world = new HittableList();
-            world.add(new Sphere(new Vec3( 0.0, -1000.5, -1.0), 1000, new Lambertian(new Vec3(0.24, 0.33, 0.64))));
-            world.add(new Sphere(new Vec3( 0.0,  0.0,    -1.0), 0.5,  new Lambertian(new Vec3(0.98, 0.00, 0.10))));
-            world.add(new Sphere(new Vec3(-1.0,  0.0,    -1.0), 0.5,  new Metal     (new Vec3(0.95, 0.93, 0.78))));
-            world.add(new Sphere(new Vec3( 1.0,  0.0,    -1.0), 0.5,  new Metal     (new Vec3(0.08, 0.40, 0.16))));
+            world.add(new Sphere(new Vec3(0.0, -1000.5, -1.0), 1000, new Lambertian(new Vec3(0.24, 0.33, 0.64))));
+            world.add(new Sphere(new Vec3(0.0, 0.0, -1.0), 0.5, new Lambertian(new Vec3(0.98, 0.00, 0.10))));
+            world.add(new Sphere(new Vec3(-1.0, 0.0, -1.0), 0.5, new Metal(new Vec3(0.95, 0.93, 0.78), 0.0)));
+            world.add(new Sphere(new Vec3(1.0, 0.0, -1.0), 0.5, new Metal(new Vec3(0.08, 0.40, 0.16), 0.4)));
 
             // Camera
 
@@ -100,12 +98,12 @@ namespace RayTracer1 {
                     data[0] = Convert.ToByte(colour.z);
                 }
 
-            img.UnlockBits(imgData);
+                img.UnlockBits(imgData);
 
-            //My god this shouldn't have been this bloody hard
-            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-            e.Graphics.DrawImage(img, new Rectangle(0, 0, Width, Height), 0, 0, imgWidth, imgHeight, GraphicsUnit.Pixel);
-        }
+                //My god this shouldn't have been this bloody hard
+                e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+                e.Graphics.DrawImage(img, new Rectangle(0, 0, Width, Height), 0, 0, imgWidth, imgHeight, GraphicsUnit.Pixel);
+        } 
     }
 }
 
