@@ -1,4 +1,4 @@
-﻿public struct Scattered {
+public struct Scattered {
     public Scattered(Vec3 _attenuation, Ray _scatteredRay, bool _didScatter) {
         attenuation = _attenuation;
         scatteredRay = _scatteredRay;
@@ -36,16 +36,18 @@ public class Lambertian : Material {
 
 public class Metal : Material {
     Vec3 colour;
+    double fuzz;
 
-    public Metal(Vec3 _colour) {
+    public Metal(Vec3 _colour, double _fuzz) {
         colour = _colour;
+        fuzz = _fuzz < 1.0 ? (_fuzz > 0.0 ? _fuzz : 0.0) : 1.0;
     }
 
     public override Scattered scatter(Ray r, HitRecord rec) {
         Scattered scattered = new Scattered();
 
         Vec3 reflected = r.dir.normalized().reflected(rec.normal);
-        scattered.scatteredRay = new Ray(rec.p, reflected);
+        scattered.scatteredRay = new Ray(rec.p, reflected.add(reflected.randomInUnitSphere().mult(fuzz)));
         scattered.attenuation = colour;
         scattered.didScatter = scattered.scatteredRay.dir.dot(rec.normal) > 0.0;
 
