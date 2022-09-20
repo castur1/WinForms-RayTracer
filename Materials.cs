@@ -1,3 +1,5 @@
+using System;
+
 public struct Scattered {
     public Scattered(Vec3 _attenuation, Ray _scatteredRay, bool _didScatter) {
         attenuation = _attenuation;
@@ -52,5 +54,44 @@ public class Metal : Material {
         scattered.didScatter = scattered.scatteredRay.dir.dot(rec.normal) > 0.0;
 
         return scattered;
+    }
+}
+
+public class Dielectric : Material {
+    double refractionIndex;
+
+    public Dielectric(double _refractionIndex) {
+        refractionIndex = _refractionIndex;
+    }
+
+    public override Scattered scatter(Ray r, HitRecord rec) {
+        Scattered scattered = new Scattered();
+        scattered.attenuation = new Vec3(1.0);
+
+        Random random = new Random();
+
+        double refractionRatio = rec.frontFace ? (1.0 / refractionIndex) : refractionIndex;
+
+        Vec3 unitDir = r.dir.normalized();
+        double cos = Math.Min(unitDir.negate().dot(rec.normal), 1.0);
+        double sin = Math.Sqrt(1.0 - cos * cos);
+
+        bool cannotRefract = refractionRatio * sin > 1.0;
+        Vec3 dir;
+        if (cannotRefract || reflectance(cos, refractionRatio) > random.NextDouble())
+            dir = unitDir.reflected(rec.normal);
+        else
+            dir = unitDir.refracted(rec.normal, refractionRatio);
+
+        scattered.scatteredRay = new Ray(rec.p, dir);
+        scattered.didScatter = true;
+
+        return scattered;
+    }
+
+    private double reflectance(double cos, double refIdx) {
+        double r0 = (1.0 - refIdx) / (1 + refIdx);
+        r0 *= r0;
+        return r0 + (1.0 - r0) * Math.Pow((1.0 - cos), 5);
     }
 }
