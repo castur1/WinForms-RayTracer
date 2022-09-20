@@ -36,7 +36,7 @@ namespace RayTracer1 {
             InitializeComponent();
         }
 
-        private unsafe void canvas_Paint(object sender, PaintEventArgs e) {
+        private unsafe void Form1_Paint(object sender, PaintEventArgs e) {
             // Image
 
             double aspectRatio = 16.0 / 9.0;
@@ -52,14 +52,20 @@ namespace RayTracer1 {
             // World
 
             HittableList world = new HittableList();
+
             world.add(new Sphere(new Vec3(0.0, -1000.5, -1.0), 1000, new Lambertian(new Vec3(0.24, 0.33, 0.64))));
             world.add(new Sphere(new Vec3(0.0, 0.0, -1.0), 0.5, new Lambertian(new Vec3(0.98, 0.00, 0.10))));
-            world.add(new Sphere(new Vec3(-1.0, 0.0, -1.0), 0.5, new Metal(new Vec3(0.95, 0.93, 0.78), 0.0)));
-            world.add(new Sphere(new Vec3(1.0, 0.0, -1.0), 0.5, new Metal(new Vec3(0.08, 0.40, 0.16), 0.4)));
+            world.add(new Sphere(new Vec3(-1.0, 0.0, -1.0), -0.5, new Dielectric(1.5)));
+            world.add(new Sphere(new Vec3(1.0, 0.0, -1.0), 0.5, new Metal(new Vec3(0.08, 0.40, 0.16), 0.1)));
 
             // Camera
 
-            Camera cam = new Camera();
+            Camera cam = new Camera(
+                new Vec3(-2.0, 2.0, 1.0), 
+                new Vec3(0.0, 0.0, -1.0), 
+                new Vec3(0.0, 1.0, 0.0), 
+                20.0, 
+                aspectRatio);
 
             // Render
 
@@ -98,12 +104,12 @@ namespace RayTracer1 {
                     data[0] = Convert.ToByte(colour.z);
                 }
 
-                img.UnlockBits(imgData);
+            img.UnlockBits(imgData);
 
-                //My god this shouldn't have been this bloody hard
-                e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-                e.Graphics.DrawImage(img, new Rectangle(0, 0, Width, Height), 0, 0, imgWidth, imgHeight, GraphicsUnit.Pixel);
-        } 
+            //My god this shouldn't have been this bloody hard
+            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+            e.Graphics.DrawImage(img, new Rectangle(0, 0, Width, Height), 0, 0, imgWidth, imgHeight, GraphicsUnit.Pixel);
+        }
     }
 }
 
