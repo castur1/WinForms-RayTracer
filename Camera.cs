@@ -1,22 +1,27 @@
-﻿public class Camera {
+using System;
+
+public class Camera {
     private Vec3 origin;
     private Vec3 corner;
     private Vec3 horizontal;
     private Vec3 vertical;
 
-    public Camera() {
-        double aspectRatio = 16.0 / 9.0;
-        double viewportHeight = 2.0;
+    public Camera(Vec3 lookFrom, Vec3 lookAt, Vec3 vup, double vfov, double aspectRatio) {
+        double theta = vfov * Math.PI / 180.0;
+        double viewportHeight = 2.0 * Math.Tan(theta / 2.0);
         double viewportWidth = viewportHeight * aspectRatio;
-        double focalLength = 1.0;
 
-        origin = new Vec3(0.0, 0.0, 0.0);
-        horizontal = new Vec3(viewportWidth, 0.0, 0.0);
-        vertical = new Vec3(0.0, viewportHeight, 0.0);
-        corner = origin.sub(horizontal.div(2.0)).sub(vertical.div(2.0)).sub(new Vec3(0.0, 0.0, focalLength));
+        Vec3 w = lookFrom.sub(lookAt).normalized();
+        Vec3 u = vup.cross(w).normalized();
+        Vec3 v = w.cross(u);
+
+        origin = lookFrom;
+        horizontal = u.mult(viewportWidth);
+        vertical = v.mult(viewportHeight);
+        corner = origin.sub(horizontal.div(2.0)).sub(vertical.div(2.0)).sub(w);
     }
 
-    public Ray getRay(double u, double v) {
-        return new Ray(origin, corner.add(horizontal.mult(u)).add(vertical.mult(v)).sub(origin));
+    public Ray getRay(double s, double t) {
+        return new Ray(origin, corner.add(horizontal.mult(s)).add(vertical.mult(t)).sub(origin));
     }
 }
