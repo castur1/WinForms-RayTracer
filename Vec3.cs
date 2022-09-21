@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 public class Vec3 {
     public double x;
@@ -7,7 +7,7 @@ public class Vec3 {
 
     static Random random = new Random();
 
-    public Vec3() { }
+    public Vec3() {}
 
     public Vec3(double _x, double _y, double _z) {
         x = _x;
@@ -107,5 +107,13 @@ public class Vec3 {
 
     public Vec3 reflected(Vec3 normal) {
         return this.sub(normal.mult(2.0 * this.dot(normal)));
+    }
+
+    public Vec3 refracted(Vec3 n, double refractiveIndexFraction) {
+        double cos = Math.Min(this.negate().dot(n), 1.0);
+        Vec3 perpendicular = this.add(n.mult(cos)).mult(refractiveIndexFraction);
+        Vec3 parallel = n.mult(-Math.Sqrt(1.0 - perpendicular.lengthSq()));
+
+        return perpendicular.add(parallel);
     }
 }
