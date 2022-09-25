@@ -94,15 +94,24 @@ public class Vec3 {
     }
 
     public Vec3 randomInUnitSphere() {
-        while (true) {
+        while(true) {
             Vec3 p = rand(-1.0, 1.0);
-            if (p.lengthSq() <= 1.0)
+            if (p.lengthSq() < 1.0)
                 return p;
         }
     }
 
     public Vec3 randomUnit() {
         return randomInUnitSphere().normalized();
+    }
+
+    public Vec3 randomInUnitCircle() {
+        while(true) {
+            Vec3 p = rand(-1.0, 1.0);
+            p.z = 0.0;
+            if (p.lengthSq() < 1.0)
+                return p;
+        }
     }
 
     public Vec3 reflected(Vec3 normal) {
