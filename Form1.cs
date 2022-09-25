@@ -46,7 +46,7 @@ namespace RayTracer1 {
 
             int imgWidth = 400;
             int imgHeight = Convert.ToInt32(imgWidth / aspectRatio);
-            int samplesPerPixel = 100;
+            int samplesPerPixel = 25;
             int maxDepth = 10;
 
             // World
@@ -60,12 +60,19 @@ namespace RayTracer1 {
 
             // Camera
 
+            Vec3 lookFrom = new Vec3(-2.0, 2.0, 2.0);
+            Vec3 lookAt = new Vec3(0.0, 0.0, -1.0);
+            Vec3 vup = new Vec3(0.0, 1.0, 0.0);
+            double focusDist = lookFrom.sub(lookAt).length();
+
             Camera cam = new Camera(
-                new Vec3(-2.0, 2.0, 1.0), 
-                new Vec3(0.0, 0.0, -1.0), 
-                new Vec3(0.0, 1.0, 0.0), 
-                20.0, 
-                aspectRatio);
+                lookFrom,
+                lookAt,
+                vup,
+                45.0,
+                aspectRatio,
+                0.2,
+                focusDist);
 
             // Render
 
