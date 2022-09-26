@@ -13,6 +13,27 @@ namespace RayTracer1 {
     public partial class Form1 : Form {
         static Random random = new Random();
 
+        // Iterative version
+        //Vec3 RayColour(Ray r, Hittable world, int depth) {
+        //    Vec3 colour = new Vec3(1.0);
+        //    HitRecord rec = world.hit(r, 0.001, double.MaxValue);
+        //    while (rec.didHit) {
+        //        Scattered scattered = rec.material.scatter(r, rec);
+        //        if (depth <= 0 || !scattered.didScatter)
+        //            return new Vec3(0.0);
+
+        //        colour = colour.mult(scattered.attenuation);
+        //        r = scattered.scatteredRay;
+        //        rec = world.hit(r, 0.001, double.MaxValue);
+        //        --depth;
+        //    }
+
+        //    double t = 0.5 * (r.dir.normalized().y + 1.0);
+        //    Vec3 colour1 = new Vec3(1.0, 1.0, 1.0);
+        //    Vec3 colour2 = new Vec3(0.5, 0.7, 1.0);
+        //    return colour.mult(colour1.mult(1.0 - t).add(colour2.mult(t)));
+        //}
+
         Vec3 RayColour(Ray r, Hittable world, int depth) {
             if (depth <= 0)
                 return new Vec3(0.0);
@@ -32,46 +53,76 @@ namespace RayTracer1 {
             return colour1.mult(1.0 - t).add(colour2.mult(t));
         }
 
-        public Form1() {
-            InitializeComponent();
+        HittableList randomScene() {
+            HittableList world = new HittableList();
+
+            Material materialGround = new Lambertian(new Vec3(0.5, 0.5, 0.5));
+            world.add(new Sphere(new Vec3(0.0, -1000.0, 0.0), 1000, materialGround));
+
+            // Change back size
+            for (int i = -4; i < 4; ++i)
+                for (int j = -4; j < 4; ++j) {
+                    double chooseMaterial = random.NextDouble();
+                    Vec3 centre = new Vec3(i + 0.9 * random.NextDouble(), 0.2, j + 0.9 * random.NextDouble());
+
+                    if (centre.sub(new Vec3(4.0, 0.2, 0)).length() > 0.9) {
+                        Material materialSphere;
+                        if (chooseMaterial < 0.8) {
+                            Vec3 colour = centre.rand().mult(centre.rand());
+                            materialSphere = new Lambertian(colour);
+                            world.add(new Sphere(centre, 0.2, materialSphere));
+                        } else if (chooseMaterial < 0.95) {
+                            Vec3 colour = centre.rand(0.5, 1.0);
+                            double fuzz = random.NextDouble() / 2.0;
+                            materialSphere = new Metal(colour, fuzz);
+                            world.add(new Sphere(centre, 0.2, materialSphere));
+                        } else {
+                            materialSphere = new Dielectric(1.5);
+                            world.add(new Sphere(centre, 0.2, materialSphere));
+                        }
+                    }
+                }
+
+            Material materialGlass = new Dielectric(1.5);
+            world.add(new Sphere(new Vec3(0.0, 1.0, 0.0), 1.0, materialGlass));
+
+            Material materialLambertian = new Lambertian(new Vec3(0.8, 0.1, 0.2));
+            world.add(new Sphere(new Vec3(-4.0, 1.0, 0.0), 1.0, materialLambertian));
+
+            Material materialMetal = new Metal(new Vec3(0.7, 0.6, 0.5), 0.0);
+            world.add(new Sphere(new Vec3(4.0, 1.0, 0.0), 1.0, materialMetal));
+
+            return world;
         }
 
-        private unsafe void Form1_Paint(object sender, PaintEventArgs e) {
+        unsafe Bitmap Render() {
             // Image
 
-            double aspectRatio = 16.0 / 9.0;
-
-            Width = 1000;
-            Height = Convert.ToInt32(Width / aspectRatio);
-
-            int imgWidth = 400;
+            double aspectRatio = (double)Width / Height;
+            int imgWidth = 800;
             int imgHeight = Convert.ToInt32(imgWidth / aspectRatio);
-            int samplesPerPixel = 25;
-            int maxDepth = 10;
+
+            int samplesPerPixel = 50;
+            int maxDepth = 8;
 
             // World
 
-            HittableList world = new HittableList();
-
-            world.add(new Sphere(new Vec3(0.0, -1000.5, -1.0), 1000, new Lambertian(new Vec3(0.24, 0.33, 0.64))));
-            world.add(new Sphere(new Vec3(0.0, 0.0, -1.0), 0.5, new Lambertian(new Vec3(0.98, 0.00, 0.10))));
-            world.add(new Sphere(new Vec3(-1.0, 0.0, -1.0), -0.5, new Dielectric(1.5)));
-            world.add(new Sphere(new Vec3(1.0, 0.0, -1.0), 0.5, new Metal(new Vec3(0.08, 0.40, 0.16), 0.1)));
+            HittableList world = randomScene();
 
             // Camera
 
-            Vec3 lookFrom = new Vec3(-2.0, 2.0, 2.0);
-            Vec3 lookAt = new Vec3(0.0, 0.0, -1.0);
+            Vec3 lookFrom = new Vec3(13.0, 2.0, 3.0);
+            Vec3 lookAt = new Vec3(0.0, 0.0, 0.0);
             Vec3 vup = new Vec3(0.0, 1.0, 0.0);
-            double focusDist = lookFrom.sub(lookAt).length();
+            double focusDist = 10.0;
 
             Camera cam = new Camera(
                 lookFrom,
                 lookAt,
                 vup,
-                45.0,
+                20.0,
                 aspectRatio,
-                0.2,
+                0.1,
                 focusDist);
 
             // Render
@@ -90,9 +141,9 @@ namespace RayTracer1 {
 
                     // Anti-aliasing through multi-sampling
                     for (int s = 0; s < samplesPerPixel; ++s) {
-                        int flippedY = imgHeight - y - 1;
-                        double u = Convert.ToDouble(x + random.NextDouble()) / (imgWidth - 1);
-                        double v = Convert.ToDouble(flippedY + random.NextDouble()) / (imgHeight - 1);
+                        double flippedY = imgHeight - y - 1;
+                        double u = (double)(x + random.NextDouble()) / (imgWidth - 1);
+                        double v = (flippedY + random.NextDouble()) / (imgHeight - 1);
 
                         Ray r = cam.getRay(u, v);
 
@@ -106,16 +157,29 @@ namespace RayTracer1 {
                         255.0 * Math.Sqrt(colour.y),
                         255.0 * Math.Sqrt(colour.z));
 
-                    data[2] = Convert.ToByte(colour.x);
-                    data[1] = Convert.ToByte(colour.y);
-                    data[0] = Convert.ToByte(colour.z);
+                    data[2] = (byte)colour.x;
+                    data[1] = (byte)colour.y;
+                    data[0] = (byte)colour.z;
                 }
 
             img.UnlockBits(imgData);
 
-            //My god this shouldn't have been this bloody hard
+            return img;
+        }
+
+        public Form1() {
+            InitializeComponent();
+
+            double aspectRatio = 3.0 / 2.0;
+            Width = 1200;
+            Height = (int)(Width / aspectRatio);
+        }
+
+        private unsafe void Form1_Paint(object sender, PaintEventArgs e) {
+            Bitmap img = Render();
+
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-            e.Graphics.DrawImage(img, new Rectangle(0, 0, Width, Height), 0, 0, imgWidth, imgHeight, GraphicsUnit.Pixel);
+            e.Graphics.DrawImage(img, new Rectangle(0, 0, Width, Height), 0, 0, img.Width, img.Height, GraphicsUnit.Pixel);
         }
     }
 }
