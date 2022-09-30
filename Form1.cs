@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+//
+// The parameters you may want to change are marked below with [x]
+//
 
 namespace RayTracer1 {
     public partial class Form1 : Form {
@@ -59,7 +62,7 @@ namespace RayTracer1 {
             Material materialGround = new Lambertian(new Vec3(0.5, 0.5, 0.5));
             world.add(new Sphere(new Vec3(0.0, -1000.0, 0.0), 1000, materialGround));
 
-            // Change back size
+            // [x] Determines the number of small spheres in the scene
             for (int i = -4; i < 4; ++i)
                 for (int j = -4; j < 4; ++j) {
                     double chooseMaterial = random.NextDouble();
@@ -99,15 +102,23 @@ namespace RayTracer1 {
             // Image
 
             double aspectRatio = (double)Width / Height;
-            int imgWidth = 800;
+            // [x] Image resolution; higher gives better quality but slower render time
+            // There's no point to it being bigger than the window's resolution 
+            int imgWidth = 400;
             int imgHeight = Convert.ToInt32(imgWidth / aspectRatio);
 
-            int samplesPerPixel = 50;
+            // [x] Again, more samples gives a cleaner result but slower render
+            int samplesPerPixel = 25;
+            // [x] The number of times the ray may reflect/refract
             int maxDepth = 8;
 
             // World
 
             HittableList world = randomScene();
+            
+            // [x] Can also be set manually:
+            // HittableList world = new HittableList();
+            // world.add(new Sphere(...));
 
             // Camera
 
@@ -117,13 +128,13 @@ namespace RayTracer1 {
             double focusDist = 10.0;
 
             Camera cam = new Camera(
-                lookFrom,
-                lookAt,
-                vup,
-                20.0,
-                aspectRatio,
-                0.1,
-                focusDist);
+                lookFrom,       // [x] Camera origin
+                lookAt,         // [x] Where the camera is looking
+                vup,            // [x] The camera's up
+                20.0,           // [x] Field of view
+                aspectRatio,    // [x] Aspect ratio
+                0.1,            // [x] The radius of the camera's aperture (smaller -> less distance blur)
+                focusDist);     // [x] The distance at which the camera is in focus
 
             // Render
 
@@ -139,7 +150,6 @@ namespace RayTracer1 {
 
                     Vec3 colour = new Vec3(0.0);
 
-                    // Anti-aliasing through multi-sampling
                     for (int s = 0; s < samplesPerPixel; ++s) {
                         double flippedY = imgHeight - y - 1;
                         double u = (double)(x + random.NextDouble()) / (imgWidth - 1);
@@ -151,7 +161,6 @@ namespace RayTracer1 {
                     }
 
                     colour = colour.div(samplesPerPixel);
-                    // Gamma-2 correction
                     colour = new Vec3(
                         255.0 * Math.Sqrt(colour.x),
                         255.0 * Math.Sqrt(colour.y),
@@ -171,6 +180,7 @@ namespace RayTracer1 {
             InitializeComponent();
 
             double aspectRatio = 3.0 / 2.0;
+            // The width of the window
             Width = 1200;
             Height = (int)(Width / aspectRatio);
         }
@@ -183,8 +193,3 @@ namespace RayTracer1 {
         }
     }
 }
-
-// Useful links, delete later
-// https://stackoverflow.com/questions/29157/how-do-i-make-a-picturebox-use-nearest-neighbor-resampling
-// https://raytracing.github.io/books/RayTracingInOneWeekend.html
-// https://github.com/ja72/WinFormRayTrace/tree/d89648c195fb176a7690050d7a79b0786b04558b
